@@ -33,6 +33,27 @@ function clientIp(req) {
   return req.socket?.remoteAddress || null;
 }
 
+// Mirror a saved lead to a Google Apps Script Web App. Best-effort:
+// any failure is logged but never affects the (already-stored) submission.
+async function pushToSheet(record) {
+  const url = process.env.SHEETS_WEBHOOK_URL;
+  if (!url) return;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: process.env.SHEETS_WEBHOOK_TOKEN || '', record }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) console.error('[quote] sheet push HTTP', res.status);
+  } catch (err) {
+    console.error('[quote] sheet push failed:', err.message);
+  }
+}
+
 // ── handler ─────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -90,6 +111,19 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: 'Server not configured' });
   }
 
+  const record = {
+    created_at: new Date().toISOString(),
+    name, company, email, application, quantity,
+    utm_source: attr.utm_source, utm_medium: attr.utm_medium,
+    utm_campaign: attr.utm_campaign, utm_term: attr.utm_term,
+    utm_content: attr.utm_content, gclid: attr.gclid, gad_source: attr.gad_source,
+    first_seen: firstSeen,
+    page_url: clean(body.page_url, 2000),
+    referer: clean(req.headers.referer, 2000),
+    user_agent: clean(req.headers['user-agent'], 1000),
+    ip: clientIp(req),
+  };
+
   // ── persist ───────────────────────────────────────────────────────
   try {
     const sql = neon(process.env.DATABASE_URL);
@@ -103,13 +137,15 @@ export default async function handler(req, res) {
         (${name}, ${company}, ${email}, ${application}, ${quantity},
          ${attr.utm_source}, ${attr.utm_medium}, ${attr.utm_campaign}, ${attr.utm_term}, ${attr.utm_content},
          ${attr.gclid}, ${attr.gad_source}, ${firstSeen},
-         ${clean(body.page_url, 2000)}, ${clean(req.headers.referer, 2000)},
-         ${clean(req.headers['user-agent'], 1000)}, ${clientIp(req)})
+         ${record.page_url}, ${record.referer}, ${record.user_agent}, ${record.ip})
     `;
   } catch (err) {
     console.error('[quote] insert failed:', err.message);
     return res.status(500).json({ ok: false, error: 'Could not save submission' });
   }
+
+  // ── mirror to Google Sheets (best-effort, never blocks the lead) ────
+  await pushToSheet(record);
 
   return res.status(200).json({ ok: true, redirect: REDIRECT_PATH });
 }

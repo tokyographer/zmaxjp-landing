@@ -75,6 +75,28 @@ vercel deploy --prod
 
 Paste your Google Ads / GTM snippet into `thank-you.html` (placeholder block in `<head>`). Optionally fill `fireConversion()` in `index.html` to also fire on submit.
 
+## Google Sheets sync (real-time)
+
+Each saved lead is also pushed to a Google Sheet via a Google Apps Script Web App
+(`api/quote.js` → `pushToSheet()`). It's best-effort: if the sheet is unreachable
+the lead is still stored in Neon and the user still sees the thank-you page.
+
+**Setup**
+
+1. Create a Google Sheet, then **Extensions → Apps Script**.
+2. Paste `sheets-appscript.gs`, set `SECRET` to your shared token, and **Deploy →
+   New deployment → Web app** (Execute as *Me*, access *Anyone*). Copy the `/exec` URL.
+3. Add two env vars in Vercel (Production + Preview):
+
+   ```bash
+   vercel env add SHEETS_WEBHOOK_URL    production   # the /exec URL
+   vercel env add SHEETS_WEBHOOK_TOKEN  production   # must equal SECRET in the script
+   ```
+
+4. Redeploy: `vercel deploy --prod`.
+
+The script auto-creates a header row on first write. Columns match the DB schema.
+
 ## Placeholders still to replace before launch
 
 - `REPLACE_SALES_EMAIL` (footer, thank-you page, error fallback)
