@@ -9,19 +9,23 @@
   <meta name="theme-color" content="#010a13">
 
   <!-- ============================================================
-       GOOGLE ADS / GTM CONVERSION TRACKING
-       This dedicated thank-you page is the conversion landing point.
-       Paste your gtag() conversion snippet or GTM container below.
-       Example (Google Ads):
-         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-CONVERSION_ID"></script>
-         <script>
-           window.dataLayer = window.dataLayer || [];
-           function gtag(){dataLayer.push(arguments);}
-           gtag('js', new Date());
-           gtag('config', 'AW-CONVERSION_ID');
-           gtag('event', 'conversion', { send_to: 'AW-CONVERSION_ID/CONVERSION_LABEL' });
-         </script>
+       GOOGLE ADS CONVERSION TRACKING
+       Base tag + page-load conversion event. This thank-you page is the
+       conversion landing point, so the event fires once on load.
+       NOTE: replace CONVERSION_LABEL below with the label from your
+       Google Ads conversion action (Tools → Conversions → your action →
+       Tag setup → the "send_to" value looks like AW-1015924271/AbC-D_efg).
        ============================================================ -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-1015924271"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-1015924271');
+    gtag('event', 'conversion', {
+      send_to: 'AW-1015924271/CONVERSION_LABEL'
+    });
+  </script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
