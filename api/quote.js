@@ -76,7 +76,8 @@ export default async function handler(req, res) {
   if (!name) errors.name = 'required';
   if (!email) errors.email = 'required';
   else if (!EMAIL_RE.test(email)) errors.email = 'invalid';
-  if (phone && !PHONE_RE.test(phone.replace(/[\s().-]/g, ''))) errors.phone = 'invalid';
+  if (!phone) errors.phone = 'required';
+  else if (!PHONE_RE.test(phone.replace(/[\s().-]/g, ''))) errors.phone = 'invalid';
   if (!application) errors.application = 'required';
   if (Object.keys(errors).length) {
     return res.status(422).json({ ok: false, error: 'Validation failed', fields: errors });
