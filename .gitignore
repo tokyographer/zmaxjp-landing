@@ -1,0 +1,23 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+config.toml
+
+# Dependencies
+node_modules/
+
+# Build / output
+storage/
+output/
+dist/
+build/
+
+# OS / editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Logs
+*.log
