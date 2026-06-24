@@ -168,7 +168,6 @@ T = {
  "Z-MAX — manufacturer of thermoelectric (Peltier) coolers, modules, cooler units and OEM assemblies since 1990, with its own factories in Japan and China.":
    {"de":"Z-MAX — Hersteller von thermoelektrischen (Peltier-)Kühlern, Modulen, Kühleinheiten und OEM-Baugruppen seit 1990, mit eigenen Werken in Japan und China.",
     "ja":"Z-MAX — 1990年以来、熱電（ペルチェ）クーラー、モジュール、クーラーユニット、OEMアセンブリを製造。日本と中国に自社工場を有します。"},
- "Contact":{"de":"Kontakt","ja":"お問い合わせ"},
  "© 2026 Z-MAX — Thermoelectric":{"de":"© 2026 Z-MAX — Thermoelektrik","ja":"© 2026 Z-MAX — 熱電"},
  "Datenschutzerklärung":{"de":"Datenschutzerklärung","ja":"プライバシーポリシー"},
 }
