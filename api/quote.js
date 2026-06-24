@@ -4,6 +4,7 @@ import { neon } from '@neondatabase/serverless';
 const MAX_BODY_BYTES = 16 * 1024;          // reject oversized payloads
 const MIN_ELAPSED_MS = 2000;               // time-trap: bots submit instantly
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\+?[1-9]\d{6,14}$/;     // E.164-style, requires country/area code
 const REDIRECT_PATH = '/thank-you';
 
 const FIELD_LIMITS = {
@@ -73,9 +74,9 @@ export default async function handler(req, res) {
 
   const errors = {};
   if (!name) errors.name = 'required';
-  if (!company) errors.company = 'required';
   if (!email) errors.email = 'required';
   else if (!EMAIL_RE.test(email)) errors.email = 'invalid';
+  if (phone && !PHONE_RE.test(phone.replace(/[\s().-]/g, ''))) errors.phone = 'invalid';
   if (!application) errors.application = 'required';
   if (Object.keys(errors).length) {
     return res.status(422).json({ ok: false, error: 'Validation failed', fields: errors });

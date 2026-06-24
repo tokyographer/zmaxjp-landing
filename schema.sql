@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS quote_submissions (
 
   -- form fields
   name          TEXT NOT NULL,
-  company       TEXT NOT NULL,
+  company       TEXT,
   email         TEXT NOT NULL,
   phone         TEXT,
   application   TEXT NOT NULL,
