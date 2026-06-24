@@ -1,58 +1,55 @@
 /**
- * Z-MAX RFQ → Google Sheets sync (Apps Script Web App)
+ * Z-MAX leads → Google Sheets (PULL model)
  *
- * Receives each new lead from /api/quote and appends it as a row.
+ * This script runs inside YOUR account and fetches leads from the secured
+ * /api/leads endpoint on a timer. It needs NO public Web App / "Anyone"
+ * access, so it works even on Google Workspace accounts that block that.
  *
  * SETUP
- * 1. Create/open a Google Sheet. Note the tab (sheet) name — default "Leads".
- * 2. Extensions → Apps Script. Delete the default code, paste this file.
- * 3. Set SECRET below to a long random string (must match the
- *    SHEETS_WEBHOOK_TOKEN env var in Vercel).
- * 4. Deploy → New deployment → type "Web app".
- *      - Execute as:        Me
- *      - Who has access:    Anyone
- *    Copy the Web app URL (ends in /exec) → this is SHEETS_WEBHOOK_URL in Vercel.
- * 5. Re-deploy whenever you edit this script (Deploy → Manage deployments → edit → Deploy).
+ * 1. Open your Google Sheet → Extensions → Apps Script.
+ * 2. Delete the default code, paste this file.
+ * 3. Fill in API_KEY below (matches LEADS_API_KEY in Vercel).
+ * 4. Run syncLeads() once (Run button). Approve the authorization prompt
+ *    — this one is the normal "unverified app" screen → Advanced → Go to ...
+ * 5. Run createHourlyTrigger() once to auto-refresh every hour.
+ *    (Change the number in that function for a different cadence.)
  */
 
-const SECRET = 'REPLACE_WITH_A_LONG_RANDOM_STRING';
+const API_URL = 'https://zmaxjp-landing.vercel.app/api/leads';
+const API_KEY = 'REPLACE_WITH_LEADS_API_KEY';
 const SHEET_NAME = 'Leads';
 
-const COLUMNS = [
-  'created_at', 'name', 'company', 'email', 'phone', 'application', 'quantity',
-  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-  'gclid', 'gad_source', 'first_seen', 'page_url', 'referer', 'user_agent', 'ip',
-];
-
-function doPost(e) {
-  try {
-    const body = JSON.parse(e.postData.contents || '{}');
-    if (!SECRET || body.token !== SECRET) {
-      return json_({ ok: false, error: 'forbidden' });
-    }
-    const rec = body.record || {};
-
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName(SHEET_NAME);
-    if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
-
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(COLUMNS);
-      sheet.setFrozenRows(1);
-    }
-
-    sheet.appendRow(COLUMNS.map(function (c) {
-      return rec[c] === undefined || rec[c] === null ? '' : rec[c];
-    }));
-
-    return json_({ ok: true });
-  } catch (err) {
-    return json_({ ok: false, error: String(err) });
+function syncLeads() {
+  const resp = UrlFetchApp.fetch(API_URL + '?key=' + encodeURIComponent(API_KEY), {
+    muteHttpExceptions: true,
+  });
+  if (resp.getResponseCode() !== 200) {
+    throw new Error('API ' + resp.getResponseCode() + ': ' + resp.getContentText().slice(0, 200));
   }
+  const data = JSON.parse(resp.getContentText());
+  if (!data.ok) throw new Error('API error: ' + (data.error || 'unknown'));
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+
+  const cols = data.columns;
+  const values = [cols];
+  data.rows.forEach(function (r) {
+    values.push(cols.map(function (c) {
+      return r[c] === null || r[c] === undefined ? '' : r[c];
+    }));
+  });
+
+  // Full refresh: clear then write everything (mirrors the DB, reflects deletions).
+  sheet.clearContents();
+  sheet.getRange(1, 1, values.length, cols.length).setValues(values);
+  sheet.setFrozenRows(1);
 }
 
-function json_(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function createHourlyTrigger() {
+  // remove existing triggers for this function to avoid duplicates
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'syncLeads') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('syncLeads').timeBased().everyHours(1).create();
 }

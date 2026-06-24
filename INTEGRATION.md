@@ -75,27 +75,31 @@ vercel deploy --prod
 
 Paste your Google Ads / GTM snippet into `thank-you.html` (placeholder block in `<head>`). Optionally fill `fireConversion()` in `index.html` to also fire on submit.
 
-## Google Sheets sync (real-time)
+## Google Sheets sync (pull model)
 
-Each saved lead is also pushed to a Google Sheet via a Google Apps Script Web App
-(`api/quote.js` → `pushToSheet()`). It's best-effort: if the sheet is unreachable
-the lead is still stored in Neon and the user still sees the thank-you page.
+The sheet pulls leads from a secured read endpoint on a timer. This avoids any
+public Apps Script Web App ("Anyone" access), so it works on Google Workspace
+accounts that block public web apps.
+
+- **Endpoint:** `GET /api/leads?key=<LEADS_API_KEY>` → JSON (or `&format=csv`)
+- **Sheet script:** `sheets-appscript.gs` runs `syncLeads()` on an hourly trigger,
+  fetching the endpoint and doing a full refresh of the `Leads` tab.
 
 **Setup**
 
-1. Create a Google Sheet, then **Extensions → Apps Script**.
-2. Paste `sheets-appscript.gs`, set `SECRET` to your shared token, and **Deploy →
-   New deployment → Web app** (Execute as *Me*, access *Anyone*). Copy the `/exec` URL.
-3. Add two env vars in Vercel (Production + Preview):
+1. Set the API key in Vercel (Production):
 
    ```bash
-   vercel env add SHEETS_WEBHOOK_URL    production   # the /exec URL
-   vercel env add SHEETS_WEBHOOK_TOKEN  production   # must equal SECRET in the script
+   vercel env add LEADS_API_KEY production
+   vercel deploy --prod
    ```
 
-4. Redeploy: `vercel deploy --prod`.
+2. Google Sheet → **Extensions → Apps Script**, paste `sheets-appscript.gs`,
+   set `API_KEY` to the same value.
+3. Run `syncLeads()` once (approve the auth prompt), then run
+   `createHourlyTrigger()` once to auto-refresh every hour.
 
-The script auto-creates a header row on first write. Columns match the DB schema.
+The full-refresh means the sheet always mirrors the DB (including deletions).
 
 ## Placeholders still to replace before launch
 
