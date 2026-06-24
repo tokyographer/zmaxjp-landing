@@ -71,6 +71,7 @@ export default async function handler(req, res) {
   const phone = clean(body.phone, FIELD_LIMITS.phone);
   const application = clean(body.application, FIELD_LIMITS.application);
   const quantity = clean(body.quantity, FIELD_LIMITS.quantity);
+  const locale = ['en', 'de', 'ja'].includes(body.locale) ? body.locale : null;
 
   const errors = {};
   if (!name) errors.name = 'required';
@@ -104,12 +105,12 @@ export default async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
     await sql`
       INSERT INTO quote_submissions
-        (name, company, email, phone, application, quantity,
+        (name, company, email, phone, application, quantity, locale,
          utm_source, utm_medium, utm_campaign, utm_term, utm_content,
          gclid, gad_source, first_seen,
          page_url, referer, user_agent, ip)
       VALUES
-        (${name}, ${company}, ${email}, ${phone}, ${application}, ${quantity},
+        (${name}, ${company}, ${email}, ${phone}, ${application}, ${quantity}, ${locale},
          ${attr.utm_source}, ${attr.utm_medium}, ${attr.utm_campaign}, ${attr.utm_term}, ${attr.utm_content},
          ${attr.gclid}, ${attr.gad_source}, ${firstSeen},
          ${pageUrl}, ${referer}, ${userAgent}, ${ip})

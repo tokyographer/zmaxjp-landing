@@ -4,7 +4,7 @@ import { neon } from '@neondatabase/serverless';
 //   GET /api/leads?key=...            → JSON  { ok, count, columns, rows }
 //   GET /api/leads?key=...&format=csv → text/csv
 const COLUMNS = [
-  'id', 'created_at', 'name', 'company', 'email', 'phone', 'application', 'quantity',
+  'id', 'created_at', 'name', 'company', 'email', 'phone', 'application', 'quantity', 'locale',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
   'gclid', 'gad_source', 'first_seen', 'page_url', 'referer', 'user_agent', 'ip',
 ];
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   try {
     const sql = neon(process.env.DATABASE_URL);
     rows = await sql`
-      SELECT id, created_at, name, company, email, phone, application, quantity,
+      SELECT id, created_at, name, company, email, phone, application, quantity, locale,
              utm_source, utm_medium, utm_campaign, utm_term, utm_content,
              gclid, gad_source, first_seen, page_url, referer, user_agent, ip
       FROM quote_submissions

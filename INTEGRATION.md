@@ -101,6 +101,22 @@ accounts that block public web apps.
 
 The full-refresh means the sheet always mirrors the DB (including deletions).
 
+## Multilingual (en / de / ja)
+
+The site ships in English (`/`), German (`/de`), and Japanese (`/ja`).
+
+- **Source of truth:** `i18n/base.template.html` (English page) + the translation
+  map in `i18n/build.py`.
+- **Build:** `python3 i18n/build.py` regenerates `index.html`, `de.html`, `ja.html`
+  (adds the language switcher, `hreflang` tags, per-language canonical, and a
+  hidden `locale` field). Use `--check` for a dry run.
+- **Editing copy:** change English in `base.template.html` and/or the `T` / `ATTR`
+  dicts in `build.py`, then rerun the build. Never hand-edit `de.html` / `ja.html`.
+- **Lead language** is captured in the `locale` column (en/de/ja).
+
+> Translations are first-draft — have a native speaker review the German and
+> Japanese technical terms before launch.
+
 ## Placeholders still to replace before launch
 
 - `REPLACE_SALES_EMAIL` (footer, thank-you page, error fallback)

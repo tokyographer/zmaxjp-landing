@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS quote_submissions (
   phone         TEXT,
   application   TEXT NOT NULL,
   quantity      TEXT,
+  locale        TEXT,
 
   -- Google Ads / marketing attribution
   utm_source    TEXT,
