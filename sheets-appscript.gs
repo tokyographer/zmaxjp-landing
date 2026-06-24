@@ -19,7 +19,7 @@ const SECRET = 'REPLACE_WITH_A_LONG_RANDOM_STRING';
 const SHEET_NAME = 'Leads';
 
 const COLUMNS = [
-  'created_at', 'name', 'company', 'email', 'application', 'quantity',
+  'created_at', 'name', 'company', 'email', 'phone', 'application', 'quantity',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
   'gclid', 'gad_source', 'first_seen', 'page_url', 'referer', 'user_agent', 'ip',
 ];

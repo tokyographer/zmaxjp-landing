@@ -10,6 +10,7 @@ const FIELD_LIMITS = {
   name: 200,
   company: 200,
   email: 320,
+  phone: 50,
   application: 5000,
   quantity: 100,
 };
@@ -87,6 +88,7 @@ export default async function handler(req, res) {
   const name = clean(body.name, FIELD_LIMITS.name);
   const company = clean(body.company, FIELD_LIMITS.company);
   const email = clean(body.email, FIELD_LIMITS.email);
+  const phone = clean(body.phone, FIELD_LIMITS.phone);
   const application = clean(body.application, FIELD_LIMITS.application);
   const quantity = clean(body.quantity, FIELD_LIMITS.quantity);
 
@@ -113,7 +115,7 @@ export default async function handler(req, res) {
 
   const record = {
     created_at: new Date().toISOString(),
-    name, company, email, application, quantity,
+    name, company, email, phone, application, quantity,
     utm_source: attr.utm_source, utm_medium: attr.utm_medium,
     utm_campaign: attr.utm_campaign, utm_term: attr.utm_term,
     utm_content: attr.utm_content, gclid: attr.gclid, gad_source: attr.gad_source,
@@ -129,12 +131,12 @@ export default async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
     await sql`
       INSERT INTO quote_submissions
-        (name, company, email, application, quantity,
+        (name, company, email, phone, application, quantity,
          utm_source, utm_medium, utm_campaign, utm_term, utm_content,
          gclid, gad_source, first_seen,
          page_url, referer, user_agent, ip)
       VALUES
-        (${name}, ${company}, ${email}, ${application}, ${quantity},
+        (${name}, ${company}, ${email}, ${phone}, ${application}, ${quantity},
          ${attr.utm_source}, ${attr.utm_medium}, ${attr.utm_campaign}, ${attr.utm_term}, ${attr.utm_content},
          ${attr.gclid}, ${attr.gad_source}, ${firstSeen},
          ${record.page_url}, ${record.referer}, ${record.user_agent}, ${record.ip})

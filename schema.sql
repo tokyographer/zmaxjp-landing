@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS quote_submissions (
   name          TEXT NOT NULL,
   company       TEXT NOT NULL,
   email         TEXT NOT NULL,
+  phone         TEXT,
   application   TEXT NOT NULL,
   quantity      TEXT,
 
