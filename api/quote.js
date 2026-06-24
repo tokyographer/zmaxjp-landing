@@ -50,18 +50,53 @@ function esc(s) {
 // logged but never affects the (already-stored) submission.
 async function sendNotification(lead) {
   if (!process.env.RESEND_API_KEY) return;
-  const rows = [
+  const source = [lead.utm_source, lead.utm_medium, lead.utm_campaign].filter(Boolean).join(' / ');
+  const contact = [
     ['Name', lead.name], ['Company', lead.company], ['Email', lead.email],
     ['Phone', lead.phone], ['Quantity', lead.quantity], ['Language', lead.locale],
-    ['Application', lead.application],
-    ['Source', [lead.utm_source, lead.utm_medium, lead.utm_campaign].filter(Boolean).join(' / ')],
-    ['gclid', lead.gclid], ['Page', lead.page_url],
   ];
-  const html = '<h2>New RFQ — Z-MAX</h2><table cellpadding="6" style="border-collapse:collapse">'
-    + rows.filter(([, v]) => v).map(([k, v]) =>
-        `<tr><td style="border:1px solid #ddd"><b>${esc(k)}</b></td><td style="border:1px solid #ddd">${esc(v)}</td></tr>`).join('')
-    + '</table>';
-  const text = rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n');
+  const attrRows = [['Source', source], ['gclid', lead.gclid], ['Page', lead.page_url]];
+
+  const NAVY = '#010a13', STEEL = '#4284bf', LINE = '#e4e8ec', MUTED = '#6f8294', INK = '#1b2733';
+  const trDef = (k, v) =>
+    `<tr>
+       <td style="padding:11px 16px;border-bottom:1px solid ${LINE};color:${MUTED};font-size:12px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;vertical-align:top;width:130px;font-family:Arial,Helvetica,sans-serif">${esc(k)}</td>
+       <td style="padding:11px 16px;border-bottom:1px solid ${LINE};color:${INK};font-size:15px;font-family:Arial,Helvetica,sans-serif">${esc(v)}</td>
+     </tr>`;
+  const block = (rowsArr) => rowsArr.filter(([, v]) => v).map(([k, v]) => trDef(k, v)).join('');
+
+  const html =
+`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f2f4f6">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f4f6;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+        <tr><td style="background:${NAVY};padding:26px 32px">
+          <div style="color:#ffffff;font-size:18px;font-weight:bold;letter-spacing:.04em;font-family:Arial,Helvetica,sans-serif">Z&#8209;MAX <span style="color:${STEEL}">THERMOELECTRIC</span></div>
+          <div style="color:${STEEL};font-size:13px;margin-top:6px;font-family:Arial,Helvetica,sans-serif">New RFQ / quote request</div>
+        </td></tr>
+        <tr><td style="padding:8px 16px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${block(contact)}</table>
+        </td></tr>
+        <tr><td style="padding:18px 16px 4px">
+          <div style="color:${MUTED};font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:0 16px 6px;font-family:Arial,Helvetica,sans-serif">Application / requirement</div>
+          <div style="padding:0 16px;color:${INK};font-size:15px;line-height:1.6;white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif">${esc(lead.application)}</div>
+        </td></tr>
+        ${source || lead.gclid || lead.page_url ? `<tr><td style="padding:18px 16px 0">
+          <div style="color:${MUTED};font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:0 16px 4px;font-family:Arial,Helvetica,sans-serif">Attribution</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${block(attrRows)}</table>
+        </td></tr>` : ''}
+        <tr><td style="padding:22px 32px;background:#fafbfc;border-top:1px solid ${LINE}">
+          <a href="mailto:${esc(lead.email)}" style="display:inline-block;background:${STEEL};color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;padding:11px 22px;border-radius:6px;font-family:Arial,Helvetica,sans-serif">Reply to ${esc(lead.name || 'lead')}</a>
+          <div style="color:${MUTED};font-size:12px;margin-top:14px;font-family:Arial,Helvetica,sans-serif">Reply-to is set to the sender — just hit reply.</div>
+        </td></tr>
+      </table>
+      <div style="color:#9aa7b2;font-size:11px;margin-top:14px;font-family:Arial,Helvetica,sans-serif">Z-MAX RFQ notification · stored in database</div>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  const text = [...contact, ['Application', lead.application], ...attrRows]
+    .filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n');
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 6000);
