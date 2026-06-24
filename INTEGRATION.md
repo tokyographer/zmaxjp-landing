@@ -101,6 +101,31 @@ accounts that block public web apps.
 
 The full-refresh means the sheet always mirrors the DB (including deletions).
 
+## Email notifications (Resend)
+
+Every saved submission emails the sales team via Resend
+(`api/quote.js` → `sendNotification()`). Best-effort: a mail failure never
+blocks the lead (it's already in Neon and the user still sees the thank-you page).
+
+- **Recipients:** set in code (`NOTIFY_TO` default), overridable via the
+  `NOTIFY_TO` env var (comma-separated).
+- **Reply-To** is the submitter's email, so replying goes straight to the lead.
+
+**Setup**
+
+1. Create a Resend account, **verify a sending domain** (e.g. `z-max.jp`) — required
+   to deliver to external inboxes (Gmail, z-max.jp, …).
+2. Add env vars in Vercel (Production):
+
+   ```bash
+   vercel env add RESEND_API_KEY production    # re_...
+   vercel env add MAIL_FROM       production    # e.g. "Z-MAX RFQ <rfq@z-max.jp>"
+   vercel deploy --prod
+   ```
+
+> Without a verified domain, Resend's `onboarding@resend.dev` only delivers to the
+> Resend account owner — fine for a smoke test, not for the live recipient list.
+
 ## Multilingual (en / de / ja)
 
 The site ships in English (`/`), German (`/de`), and Japanese (`/ja`).
