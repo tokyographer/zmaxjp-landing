@@ -840,7 +840,7 @@ html.reveal-off .reveal{opacity:1!important;transform:none!important;transition:
       <div class="rfq-success" role="status" aria-live="polite">
         <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"></path></svg></div>
         <h3>Thank you — your RFQ is in.</h3>
-        <p>An engineer will get back to you within 2 business days. For anything urgent, email <a href="mailto:REPLACE_SALES_EMAIL" style="color:var(--steel-d);text-decoration:underline">REPLACE_SALES_EMAIL</a>.</p>
+        <p>An engineer will get back to you within 2 business days.</p>
       </div>
     </div>
   </div>
@@ -1066,7 +1066,7 @@ html.reveal-off .reveal{opacity:1!important;transform:none!important;transition:
         <div class="rfq-success" role="status" aria-live="polite">
           <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"></path></svg></div>
           <h3>Thank you — your RFQ is in.</h3>
-          <p>An engineer will get back to you within 2 business days. For anything urgent, email <a href="mailto:REPLACE_SALES_EMAIL" style="color:var(--steel-d);text-decoration:underline">REPLACE_SALES_EMAIL</a>.</p>
+          <p>An engineer will get back to you within 2 business days.</p>
         </div>
       </div>
     </div>
@@ -1266,7 +1266,7 @@ document.querySelectorAll('form.zmax-rfq').forEach(form=>{
       } else {throw new Error('Bad response');}
     }catch(err){
       btn.disabled=false;btn.style.opacity='1';btn.innerHTML=label;
-      alert('Something went wrong sending your RFQ. Please email REPLACE_SALES_EMAIL and we\'ll pick it up.');
+      alert('Something went wrong sending your RFQ. Please try again in a moment.');
     }
   });
 });

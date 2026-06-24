@@ -59,9 +59,9 @@ T = {
    {"de":"Unverbindlich. Wir geben Ihre Daten niemals weiter.","ja":"義務は一切ありません。お客様の情報を第三者に提供することはありません。"},
  "Privacy policy / Datenschutzerklärung":{"de":"Datenschutzerklärung","ja":"プライバシーポリシー / Datenschutzerklärung"},
  "Thank you — your RFQ is in.":{"de":"Vielen Dank — Ihre Anfrage ist eingegangen.","ja":"ありがとうございます — 見積依頼を受け付けました。"},
- "An engineer will get back to you within 2 business days. For anything urgent, email":
-   {"de":"Ein Ingenieur meldet sich innerhalb von 2 Werktagen. Bei dringenden Fällen schreiben Sie an",
-    "ja":"技術者が2営業日以内にご連絡します。お急ぎの場合はこちらまでメールください："},
+ "An engineer will get back to you within 2 business days.":
+   {"de":"Ein Ingenieur meldet sich innerhalb von 2 Werktagen.",
+    "ja":"技術者が2営業日以内にご連絡します。"},
  "Since 1990":{"de":"Seit 1990","ja":"1990年創業"},
  "Thermoelectric specialist":{"de":"Spezialist für Thermoelektrik","ja":"熱電の専門メーカー"},
  "Own factories":{"de":"Eigene Werke","ja":"自社工場"},
