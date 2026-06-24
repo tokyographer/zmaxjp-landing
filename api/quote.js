@@ -27,6 +27,8 @@ const NOTIFY_TO = (process.env.NOTIFY_TO ||
 ).split(',').map((s) => s.trim()).filter(Boolean);
 // Verified Resend sender. Set MAIL_FROM to e.g. "Z-MAX RFQ <rfq@z-max.jp>".
 const MAIL_FROM = process.env.MAIL_FROM || 'Z-MAX RFQ <onboarding@resend.dev>';
+// Reply-to on the customer confirmation email.
+const REPLY_TO = process.env.REPLY_TO || 'info@z-max.jp';
 
 // ── helpers ─────────────────────────────────────────────────────────
 function clean(value, max) {
@@ -201,7 +203,7 @@ async function sendConfirmation(lead) {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: MAIL_FROM, to: [lead.email], reply_to: NOTIFY_TO[0], subject: t.subject, html, text }),
+      body: JSON.stringify({ from: MAIL_FROM, to: [lead.email], reply_to: REPLY_TO, subject: t.subject, html, text }),
       signal: ctrl.signal,
     });
     clearTimeout(tm);
