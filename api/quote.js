@@ -122,6 +122,95 @@ async function sendNotification(lead) {
   }
 }
 
+// Localized confirmation email copy.
+const CONFIRM = {
+  en: {
+    subject: 'We received your RFQ — Z-MAX',
+    heading: 'Thank you for your request',
+    body: 'We have received your request for a quote. A Z-MAX engineer — not a sales rep — will review your requirement and get back to you within <b>2 business days</b>.',
+    recap: 'Your request',
+    closing: 'If you need to add anything, just reply to this email.',
+    signoff: 'Z-MAX — Thermoelectric (Peltier) coolers, direct from the manufacturer.',
+    labels: { application: 'Application / requirement', quantity: 'Estimated quantity' },
+  },
+  de: {
+    subject: 'Ihre Anfrage ist eingegangen — Z-MAX',
+    heading: 'Vielen Dank für Ihre Anfrage',
+    body: 'Wir haben Ihre Angebotsanfrage erhalten. Ein Z-MAX-Ingenieur — kein Vertriebler — prüft Ihre Anforderung und meldet sich innerhalb von <b>2 Werktagen</b>.',
+    recap: 'Ihre Anfrage',
+    closing: 'Wenn Sie etwas ergänzen möchten, antworten Sie einfach auf diese E-Mail.',
+    signoff: 'Z-MAX — Thermoelektrische (Peltier-)Kühler, direkt vom Hersteller.',
+    labels: { application: 'Anwendung / Anforderung', quantity: 'Geschätzte Menge' },
+  },
+  ja: {
+    subject: '見積依頼を受け付けました — Z-MAX',
+    heading: 'お問い合わせありがとうございます',
+    body: '見積のご依頼を受け付けました。営業担当ではなくZ-MAXの技術者が内容を確認し、<b>2営業日以内</b>にご連絡いたします。',
+    recap: 'ご依頼内容',
+    closing: '追加のご要望があれば、このメールにそのままご返信ください。',
+    signoff: 'Z-MAX — 熱電（ペルチェ）クーラー、メーカー直販。',
+    labels: { application: '用途・要件', quantity: '予定数量' },
+  },
+};
+
+// Email the customer a localized confirmation. Best-effort.
+async function sendConfirmation(lead) {
+  if (!process.env.RESEND_API_KEY || !lead.email) return;
+  const t = CONFIRM[lead.locale] || CONFIRM.en;
+  const NAVY = '#010a13', STEEL = '#4284bf', LINE = '#e4e8ec', MUTED = '#6f8294', INK = '#1b2733';
+  const ff = 'font-family:Arial,Helvetica,sans-serif';
+  const recap = [[t.labels.application, lead.application], [t.labels.quantity, lead.quantity]]
+    .filter(([, v]) => v).map(([k, v]) =>
+      `<tr>
+         <td style="padding:11px 16px;border-bottom:1px solid ${LINE};color:${MUTED};font-size:12px;text-transform:uppercase;letter-spacing:.04em;vertical-align:top;width:150px;${ff}">${esc(k)}</td>
+         <td style="padding:11px 16px;border-bottom:1px solid ${LINE};color:${INK};font-size:15px;line-height:1.6;white-space:pre-wrap;${ff}">${esc(v)}</td>
+       </tr>`).join('');
+  const html =
+`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f2f4f6">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f4f6;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+        <tr><td style="background:${NAVY};padding:26px 32px">
+          <div style="color:#ffffff;font-size:18px;font-weight:bold;letter-spacing:.04em;${ff}">Z&#8209;MAX <span style="color:${STEEL}">THERMOELECTRIC</span></div>
+        </td></tr>
+        <tr><td style="padding:30px 32px 8px">
+          <div style="color:${INK};font-size:21px;font-weight:bold;${ff}">${esc(t.heading)}</div>
+          <p style="color:${INK};font-size:15px;line-height:1.65;margin:14px 0 0;${ff}">${t.body}</p>
+        </td></tr>
+        ${recap ? `<tr><td style="padding:18px 16px 0">
+          <div style="color:${MUTED};font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:0 16px 4px;${ff}">${esc(t.recap)}</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${recap}</table>
+        </td></tr>` : ''}
+        <tr><td style="padding:22px 32px 30px">
+          <p style="color:${MUTED};font-size:14px;line-height:1.6;margin:0;${ff}">${esc(t.closing)}</p>
+        </td></tr>
+        <tr><td style="padding:18px 32px;background:#fafbfc;border-top:1px solid ${LINE}">
+          <div style="color:${MUTED};font-size:12px;line-height:1.6;${ff}">${esc(t.signoff)}</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+  const text = `${t.heading}\n\n${t.body.replace(/<[^>]+>/g, '')}\n\n`
+    + [[t.labels.application, lead.application], [t.labels.quantity, lead.quantity]]
+        .filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n')
+    + `\n\n${t.closing}\n${t.signoff}`;
+  try {
+    const ctrl = new AbortController();
+    const tm = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: MAIL_FROM, to: [lead.email], reply_to: NOTIFY_TO[0], subject: t.subject, html, text }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(tm);
+    if (!res.ok) console.error('[quote] confirm email HTTP', res.status, await res.text());
+  } catch (err) {
+    console.error('[quote] confirm email failed:', err.message);
+  }
+}
+
 // ── handler ─────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -207,11 +296,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: 'Could not save submission' });
   }
 
-  await sendNotification({
+  const lead = {
     name, company, email, phone, application, quantity, locale,
     utm_source: attr.utm_source, utm_medium: attr.utm_medium, utm_campaign: attr.utm_campaign,
     gclid: attr.gclid, page_url: pageUrl,
-  });
+  };
+  await Promise.all([sendNotification(lead), sendConfirmation(lead)]);
 
   return res.status(200).json({ ok: true, redirect: REDIRECT_PATH });
 }
