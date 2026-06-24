@@ -1,0 +1,10 @@
+{
+  "name": "zmaxjp-landing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Z-MAX custom thermoelectric (Peltier) cooler landing page with Neon-backed RFQ form",
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}
