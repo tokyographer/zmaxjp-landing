@@ -87,10 +87,11 @@ accounts that block public web apps.
 
 **Setup**
 
-1. Set the API key in Vercel (Production):
+1. Set the API key in Vercel (Production) to a **non-empty** random value, then
+   redeploy so the function picks it up:
 
    ```bash
-   vercel env add LEADS_API_KEY production
+   openssl rand -hex 24 | vercel env add LEADS_API_KEY production
    vercel deploy --prod
    ```
 
@@ -100,6 +101,20 @@ accounts that block public web apps.
    `createHourlyTrigger()` once to auto-refresh every hour.
 
 The full-refresh means the sheet always mirrors the DB (including deletions).
+
+> **The key must be non-empty.** `api/leads.js` treats a missing *or empty*
+> `LEADS_API_KEY` as "locked" and returns `403` to every request — so an env var
+> set to `""` silently breaks the sync for everyone. If the sheet stops updating,
+> first verify the endpoint directly:
+>
+> ```bash
+> curl -s -o /dev/null -w '%{http_code}\n' "https://zmaxjp-landing.vercel.app/api/leads?key=<LEADS_API_KEY>"
+> # 200 = working · 403 = key empty/mismatched · redeploy after changing the env var
+> ```
+>
+> Never commit the real key: keep the `REPLACE_WITH_LEADS_API_KEY` placeholder in
+> `sheets-appscript.gs` (the repo is public); the live value belongs only in Vercel
+> and your Sheet's Apps Script.
 
 ## Email notifications (Resend)
 
