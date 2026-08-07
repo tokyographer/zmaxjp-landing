@@ -21,10 +21,9 @@ const ATTRIBUTION_KEYS = [
   'utm_term', 'utm_content', 'gclid', 'gad_source',
 ];
 
-// Lead notification recipients. Override with NOTIFY_TO (comma-separated).
-const NOTIFY_TO = (process.env.NOTIFY_TO ||
-  'kojirotani522@gmail.com,takai@z-max.jp,zmaxjapan@gmail.com,ando@z-max.jp,obana@haaarouti.com'
-).split(',').map((s) => s.trim()).filter(Boolean);
+// Lead notification recipients — comma-separated, set in Vercel env vars.
+const NOTIFY_TO = (process.env.NOTIFY_TO || '')
+  .split(',').map((s) => s.trim()).filter(Boolean);
 // Verified Resend sender. Set MAIL_FROM to e.g. "Z-MAX RFQ <rfq@z-max.jp>".
 const MAIL_FROM = process.env.MAIL_FROM || 'Z-MAX RFQ <onboarding@resend.dev>';
 // Reply-to on the customer confirmation email.
@@ -52,6 +51,10 @@ function esc(s) {
 // logged but never affects the (already-stored) submission.
 async function sendNotification(lead) {
   if (!process.env.RESEND_API_KEY) return;
+  if (!NOTIFY_TO.length) {
+    console.error('[quote] NOTIFY_TO is not set — run: vercel env add NOTIFY_TO production');
+    return;
+  }
   const source = [lead.utm_source, lead.utm_medium, lead.utm_campaign].filter(Boolean).join(' / ');
   const contact = [
     ['Name', lead.name], ['Company', lead.company], ['Email', lead.email],

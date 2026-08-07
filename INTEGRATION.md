@@ -122,8 +122,9 @@ Every saved submission emails the sales team via Resend
 (`api/quote.js` → `sendNotification()`). Best-effort: a mail failure never
 blocks the lead (it's already in Neon and the user still sees the thank-you page).
 
-- **Recipients:** set in code (`NOTIFY_TO` default), overridable via the
-  `NOTIFY_TO` env var (comma-separated).
+- **Recipients:** the `NOTIFY_TO` env var (comma-separated) — no default in code,
+  so the repo stays free of addresses. Unset means no notification is sent (the
+  lead is still stored; the miss is logged).
 - **Reply-To** is the submitter's email, so replying goes straight to the lead.
 
 **Setup**
@@ -135,8 +136,12 @@ blocks the lead (it's already in Neon and the user still sees the thank-you page
    ```bash
    vercel env add RESEND_API_KEY production    # re_...
    vercel env add MAIL_FROM       production    # e.g. "Z-MAX RFQ <rfq@z-max.jp>"
+   vercel env add NOTIFY_TO       production    # a@z-max.jp,b@z-max.jp
    vercel deploy --prod
    ```
+
+   To change recipients later, edit `NOTIFY_TO` in the Vercel dashboard and
+   redeploy — env vars are read at runtime but only refresh on a new deployment.
 
 > Without a verified domain, Resend's `onboarding@resend.dev` only delivers to the
 > Resend account owner — fine for a smoke test, not for the live recipient list.
